@@ -10,6 +10,14 @@ language; I've supplied one courtesy of:
 
 Josh Kaufman : https://github.com/first20hours 
 
+I've also provided an example file 'test.txt'
+
+So you can test drive with:
+
+./rot_hunter ./google-10000-english.txt ./test.txt
+
+Enjoy!
+
 """
 
 import string
