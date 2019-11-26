@@ -3,6 +3,8 @@
 """
 
 Encodes and decodes rot cyphers when passed as arguments
+Will show you the output in order of confidence that the 
+plaintext is made up of valid dictionary words.
 
 You'll have to put your candidate rot text in a file,
 you'll also need a dictionary of known words in your target 
@@ -39,12 +41,10 @@ def rot(plaintext, rotation_index=13):
             new_char = charset.index(char) + int(rotation_index)
             if new_char < 26:
                 ciphertext = ciphertext + charset[new_char]
-                #ciphertext.append(charset[new_char])
             else:
                 ciphertext = ciphertext + charset[new_char % 26]
-                #ciphertext.append(charset[new_char % 26])
         else:
-            ciphertext = ciphertext #+ "<<ERROR - Char {} not handled correclty".format(char)
+            ciphertext = ciphertext 
     return ciphertext
 
 def get_confidence(plaintext, dictionary):
