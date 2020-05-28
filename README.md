@@ -205,6 +205,19 @@ This, in the case of the test site, is equivalent to:
 ~$ http-form-brute.py -pU user -pP pass -l auditor -p /usr/share/wordlists/fasttrack.txt -sM "Login successful" -t 3
 ```
 
+# Prime Tester
+
+This script accepts one command line argument - an integer. It will tell you if that argument is a prime number.
+
+Usage:
+
+```
+~$ prime-test.py 53
+[+] - Yes, 52 is prime!
+```
+
+Simple!
+
 # I want Moar
 
 This project is in ongoing development as I work on various challenges; its posted on GitHub to allow people to review and feedback. If you have a suggestion, feature, complaint, funny story, write to: info@blackfell.net.
