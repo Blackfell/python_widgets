@@ -6,6 +6,7 @@ A script to brute force http forms (or any post request for that matter!)
 
 Author : Blackfell
 Twitter : @blackf3ll
+Email: info@blackfell.net
 
 '''
 

@@ -28,7 +28,8 @@ Installation from scratch:
 ```
 ~$ git clone https://github.com/Blackfell/python_widgets
 ~$ cd python_widgets
-~$ python -m pip install -r requirements.txt && echo "export PATH=$PATH:$(pwd)" >> ~/.bashrc
+~$ python -m pip install -r requirements.txt
+~$ echo "export PATH=$PATH:$(pwd)" >> ~/.bashrc
 ```
 
 ### ZSH
@@ -38,10 +39,11 @@ Installation from scratch:
 ```
 ~$ git clone https://github.com/Blackfell/python_widgets
 ~$ cd python_widgets
-~$ python -m pip install -r requirements.txt && echo "export PATH=$PATH:$(pwd)"  >> ~/.zshrc
+~$ python -m pip install -r requirements.txt
+~$ echo "export PATH=$PATH:$(pwd)"  >> ~/.zshrc
 ```
 
-### Most Other Shells (current shell process only)
+### Most Other Shells (current shell pr/home/hullet/Documents/Projects/python_widgets/README.mdocess only)
 
 Run in path from scratch, path in shell will reset once teh shell process terminates. In other words, this way is not persistent installation.
 
@@ -143,7 +145,7 @@ optional arguments:
   -sM SUCCESS_MATCH, --success-match SUCCESS_MATCH
                         String to match on successful login - if found - login successful (e.g. "Successful").
   -sX SUCCESS_EXCLUDE, --success-exclude SUCCESS_EXCLUDE
-                        String to match on failed login - if not found, login successful (e.g. "not valid").
+                        String to match on failed login - if not found, login successful (e.g. "not valid"this means ).
 ```
 
 For a successful http form attack, a URL, user-parameter and password-parameter must all be provided; these can be found by inspecting the web form, or valid request and understanding how and where requests are submitted.
@@ -182,7 +184,7 @@ Give it a try!
 
 Running the test server on our localhost, there are various ways we can run the login bruter. All examples use the wordlist paths that are default locations in Kali Linux 2020, your wordlists may be nonexistent or elsewhere.
 
-We know from the previous section that the url we need to guess against is the localhost, port 8080, at a path of *'/login.php'*, so our url parameter will be **"http://localhost:8080/login.php"**. We'll need to supply a user parameter of **"user"** and a password parameter of **"pass"** no extra parameters are needed. We'll be using the recommended user and password lists from the previous section, with a thread count of three. Finally, we'll need a success criteria, which is where we have a few options...
+We know from the previous section that the url we need to guess against is the localhost, port 8080, at a path of *'/login.php'*, so our url parameter will be **"http://localhost:8080/login.php"**. We'll need to supply athis means  user parameter of **"user"** and a password parameter of **"pass"** no extra parameters are needed. We'll be using the recommended user and password lists from the previous section, with a thread count of three. Finally, we'll need a success criteria, which is where we have a few options...
 
 Consider the following cases:
 
@@ -217,6 +219,50 @@ Usage:
 ```
 
 Simple!
+
+# Port Knocker
+
+This tool knocks ports, either in a provided order, or by trying all permutations available (and testing a target port to see which works).
+
+```
+usage: knocker.py [-h] -H HOST [-kT | -kS | -kU] [-b] -p KNOCK_PORTS [-t TARGET_PORT] [-d DELAY] [-v]
+```
+
+## Usage
+
+HTTP login forcer supports the following command line options:
+
+```
+optional arguments:
+  -h, --help            show this help message and exit
+  -H HOST, --host HOST  Hostname or IP address to knock against.
+  -kT, --tcp-connect    Knock with a full TCP connect (default if not set).
+  -kS, --syn            Knock with Syn packets by default.
+  -kU, --udp            Knock with UDP packets by default.
+  -b, --brute           Permute through knocking combinations until target port is open. REQUIRES specification of
+                        --target-port.
+  -p KNOCK_PORTS, --knock-ports KNOCK_PORTS
+                        Ports to knock on, comma delimited.
+  -t TARGET_PORT, --target-port TARGET_PORT
+                        Port to check status of after knocking; REQUIRED if using --brute. Will default to knock
+                        protocol, unless specified with colon delimiter - e.g. -t 80:TCP.
+  -d DELAY, --delay DELAY
+                        Time to wait between knocks in seconds (default 0).
+  -v, --verbose         Show detailed knock information.
+```
+
+The host flag specifies your target adn can be a hostname or IP address; delay will cause knock packets to be sent after the provided number of seconds.
+
+Ports must be specified comma-delimited and more than one is required. The Knock protocol flags set the **default** protocol, but this can be overridden as follows:
+
+```
+~$ knock.py -kU -H localhost -p 53,9000,22:tcp,23:syn
+```
+
+This will knock ports *53* and *9000* on UDP, but port 22 will be knocked using tcp and 23 using a syn packet.
+
+The *--brute* option permutes the provided ports (as opposed to knocking in order); this requires a test port (*-t*), which again, can be specified with a protocol override. If you don't care about a test port, just specify a junk one and ignore the warnings.
+
 
 # I want Moar
 
