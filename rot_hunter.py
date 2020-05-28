@@ -1,22 +1,50 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
+                             /\\
+                            /^^\_
+                    /\     /^^^^^\\
+                   /^^|   /^^^^^^^\_
+                  /^^^^\_/^^^^^^^^^^\\
+                _/  \ /    /  |  \   \\
+               /   /   \    |  \    \ \\
+              /                        \\
+             /   $    $   /     $  $    |
+            / $  |  $ |    $    |  |  $  \\
+           /  |  $  |   $  |$  $    $ |$  \\
+        ######################################
+        #                                    #
+        #              rot hunter            #
+        #                 by                 #
+        #             @blackf3ll             #
+        #         info@blackfell.net         #
+        #                                    #
+        ######################################
+
+DESCRIPTION:
 
 Encodes and decodes rot cyphers when passed as arguments
-Will show you the output in order of confidence that the 
+Will show you the output in order of confidence that the
 plaintext is made up of valid dictionary words.
 
-You'll have to put your candidate rot text in a file,
-you'll also need a dictionary of known words in your target 
-language; I've supplied one courtesy of:
+USAGE:
 
-Josh Kaufman : https://github.com/first20hours 
+Place candidate rot text in a file, get hold of a list
+of valid dictionary words that may be in your output.
+Basic usage is:
 
-I've also provided an example file 'test.txt'
+~$ rot_hunter.py dictionary_wrods.txt ciphertext.txt
 
-So you can test drive with:
+EXAMPLES:
 
-./rot_hunter ./google-10000-english.txt ./test.txt
+supplied in the resources folder is a list courtesy of:
+
+Josh Kaufman : https://github.com/first20hours
+
+I've also provided an example file 'test.txt' in the same
+directory. You can test drive with:
+
+~$ ./bin/rot_hunter.py ./resources/rot_hunter/google-10000-english.txt ./resources/rot_hunter/test.txt
 
 Enjoy!
 
@@ -44,7 +72,7 @@ def rot(plaintext, rotation_index=13):
             else:
                 ciphertext = ciphertext + charset[new_char % 26]
         else:
-            ciphertext = ciphertext 
+            ciphertext = ciphertext
     return ciphertext
 
 def get_confidence(plaintext, dictionary):
@@ -91,7 +119,7 @@ def display_output(sorted_messages):
 if __name__ == '__main__':
     #CLI Parsing - simple and dirty:
     if len(sys.argv[1:]) != 2:
-        print("Usage: {} [wordlist_filepath] [plaintext_filepath]".format(sys.argv[0]))
+        print("Usage: {} [wordlist_filepath] [ciphertext_filepath]".format(sys.argv[0]))
         sys.exit(0)
     #Set up variables from CLI
     word_list=sys.argv[1]

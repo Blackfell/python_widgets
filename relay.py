@@ -1,5 +1,38 @@
 #!/usr/bin/env python3
 
+"""
+                             /\\
+                            /^^\_
+                    /\     /^^^^^\\
+                   /^^|   /^^^^^^^\_
+                  /^^^^\_/^^^^^^^^^^\\
+                _/  \ /    /  |  \   \\
+               /   /   \    |  \    \ \\
+              /                        \\
+             /   $    $   /     $  $    |
+            / $  |  $ |    $    |  |  $  \\
+           /  |  $  |   $  |$  $    $ |$  \\
+        ######################################
+        #                                    #
+        #              TCP relay             #
+        #                 by                 #
+        #             @blackf3ll             #
+        #         info@blackfell.net         #
+        #                                    #
+        ######################################
+
+DESCRIPTION:
+
+Relays two TCP ports, optionally printing relayed traffic to the console
+
+USAGE:
+
+Usage information is available via:
+
+~$ relay.py -h
+
+"""
+
 from argparse import ArgumentParser
 from socket import socket, timeout, SHUT_RD, AF_INET, SOCK_STREAM
 from multiprocessing import Queue, Process, Event

