@@ -32,8 +32,6 @@ def is_prime(n):
 def main():
 	#CLI Parsing - simple and dirty:
 	if len(argv[1:]) != 1:
-		app = argv[0]
-		app = executable
 		app = basename(__file__)
 		print("Usage: {} [number]".format(app))
 		exit(0)

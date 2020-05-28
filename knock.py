@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 '''
+
 A simple port knocking script, with brute forcing/permutation options
 
 Author : Blackfell

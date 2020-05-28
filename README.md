@@ -263,6 +263,19 @@ This will knock ports *53* and *9000* on UDP, but port 22 will be knocked using 
 
 The *--brute* option permutes the provided ports (as opposed to knocking in order); this requires a test port (*-t*), which again, can be specified with a protocol override. If you don't care about a test port, just specify a junk one and ignore the warnings.
 
+# Email Parser
+
+This script takes a URL and returns a list of email addresses listed on that page. It is very simple, uses the requests libraries and regular expressions, so results on Javascript heavy pages will be limited.
+
+An optional second argument will write the results out to a file.
+
+Usage:
+
+```
+~$ email-parser.py "https://google.com" outfile.txt
+```
+
+Simple (again)!
 
 # I want Moar
 
