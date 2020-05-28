@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-import sys
-import socket
-import multiprocessing
-import argparse
-import queue
 
+from argparse import ArgumentParser
+from socket import socket, timeout, SHUT_RD, AF_INET, SOCK_STREAM
+from multiprocessing import Queue, Process, Event
 from time import sleep
+from sys import exit, argv
 from hexdump import hexdump
 
 def get_args():
 
-    parser = argparse.ArgumentParser()
+    parser = ArgumentParser()
     parser.add_argument('-l', '--listen', action='append', nargs='+', help='Listen on a given port. Format -l <port>')
     parser.add_argument('-c', '--connect', action='append', nargs='+', help='Connect to a given host & port. Format : -c <host> <port>')
     parser.add_argument('-t', '--tee', action='store_true', help='Also print all traffic on Stdout.')
@@ -26,13 +25,13 @@ def get_args():
         print("[!] - Incorrect number of relay endpoints. You must specify two endpoints to relay.")
         print("\tYou can specify either two local ports, two ports to connect remote, or one local one remote.\n")
         print("Example - relay local listener on port 4444 to local connection to port 445:")
-        print("\t{} -l 4444 -c 127.0.0.1 445\n".format(sys.argv[0]))
+        print("\t{} -l 4444 -c 127.0.0.1 445\n".format(argv[0]))
         print("Example - relay local listener on port 4444 to local listener on port 445:")
-        print("\t{} -l 4444 -l 445\n".format(sys.argv[0]))
+        print("\t{} -l 4444 -l 445\n".format(argv[0]))
         print("Example - relay connection to remote server (10.10.10.10) port 5555 to local connection to port 445:")
-        print("\t{} -c 10.10.10.10 5555 -c 127.0.0.1 445\n".format(sys.argv[0]))
+        print("\t{} -c 10.10.10.10 5555 -c 127.0.0.1 445\n".format(argv[0]))
         parser.print_help()
-        sys.exit(0)
+        exit(0)
 
     bind1 = args.listen[0] if args.listen else None
     bind2 = args.listen[1] if (args.listen and len(args.listen) > 1) else None
@@ -50,7 +49,7 @@ def get_args():
         print("[!] - Error converting arguments:\n\t{}".format(e))
         print("\tAre your ports and IP addresses formatted correctly?\n")
         parser.print_help()
-        sys.exit(0)
+        exit(0)
 
     print("bind1 : {}, bind2 : {}, connect1 : {}, connect 2 : {}".format(bind1, bind2, connect1, connect2))
 
@@ -65,7 +64,7 @@ def get_args():
             print("[+] - Relay Combo good - bind to connect")
     else:
         print("[!] - Bad relay combo!")
-        sys.exit(0)
+        exit(0)
 
     return bind1, bind2, connect1, connect2, args.verbose, args.tee
 
@@ -78,24 +77,24 @@ def recv_from(connection):
             if not data:
                 break
             buffer += data
-    except socket.timeout as e:
+    except timeout as e:
         pass
     except Exception as e:
             print("[!] - Exception while receiving : {}".format(e))
     return buffer
 
 def connect_relay(host, q_in, q_out, tee, kill):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s = socket(AF_INET, SOCK_STREAM)
     s.settimeout(0.5)
     while True:
         try:
             if kill.is_set():
                 print("[!] - Killing connection to {}".format(host))
-                s.shutdown(socket.SHUT_RD)
+                s.shutdown(SHUT_RD)
                 s.close()
             s.connect(host)
             break
-        except socket.timeout:
+        except timeout:
             pass
         except Exception as e:
             print("[!!] - Can't connect to {}: {}".format(host, e))
@@ -105,7 +104,7 @@ def connect_relay(host, q_in, q_out, tee, kill):
     while True:
         if kill.is_set():
             print("[!] - Killing connection to {}".format(host))
-            s.shutdown(socket.SHUT_RD)
+            s.shutdown(SHUT_RD)
             s.close()
             return
 	#if we got data on the sister socket, send that first
@@ -121,12 +120,12 @@ def connect_relay(host, q_in, q_out, tee, kill):
 
 def bind_relay(host, q_in, q_out, tee, kill):
     try:
-        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server = socket(AF_INET, SOCK_STREAM)
         try:
             server.bind(host)
         except Exception as e:
             print("[!!] - Can't bind on {}: {}".format(host, e))
-            sys.exit(0)
+            exit(0)
         print("[+] - Listening on {}".format(host))
         server.listen(0)
         server.settimeout(0.5)
@@ -134,12 +133,12 @@ def bind_relay(host, q_in, q_out, tee, kill):
             try:
                 if kill.is_set():
                     print("[!] - Killing listener on {}".format(host))
-                    server.shutdown(socket.SHUT_RD)
+                    server.shutdown(SHUT_RD)
                     server.close()
                     return
                 clnt_sock, addr = server.accept()
                 break
-            except socket.timeout:
+            except timeout:
                 pass
             except Exception as e:
                 print("[!] - Exception accepting connections : {}".format(e))
@@ -147,7 +146,7 @@ def bind_relay(host, q_in, q_out, tee, kill):
         while True:
             if kill.is_set():
                 print("[!] - Killing listener on {}".format(host))
-                server.shutdown(socket.SHUT_RD)
+                server.shutdown(SHUT_RD)
                 server.close()
                 return
             #if we got data on the sister socket, send that first
@@ -169,23 +168,23 @@ def bind_relay(host, q_in, q_out, tee, kill):
 
 def main():
     #Setup queue data structures for relayed data
-    q_1_2 = multiprocessing.Queue()
-    q_2_1 = multiprocessing.Queue()
-    kill_flag = multiprocessing.Event()
+    q_1_2 = Queue()
+    q_2_1 = Queue()
+    kill_flag = Event()
 
     #Get args
     bind1, bind2, conn1, conn2, v, t = get_args()
 
     #Setup relay
     if bind1 and bind2:
-        host1 = multiprocessing.Process(target=bind_relay, args=(bind1, q_2_1, q_1_2, t, kill_flag))
-        host2 = multiprocessing.Process(target=bind_relay, args=(bind2, q_1_2, q_2_1, t, kill_flag))
+        host1 = Process(target=bind_relay, args=(bind1, q_2_1, q_1_2, t, kill_flag))
+        host2 = Process(target=bind_relay, args=(bind2, q_1_2, q_2_1, t, kill_flag))
     elif conn1 and conn2:
-        host1 = multiprocessing.Process(target=connect_relay, args=(conn1, q_2_1, q_1_2, t, kill_flag))
-        host2 = multiprocessing.Process(target=connect_relay, args=(conn2, q_1_2, q_2_1, t, kill_flag))
+        host1 = Process(target=connect_relay, args=(conn1, q_2_1, q_1_2, t, kill_flag))
+        host2 = Process(target=connect_relay, args=(conn2, q_1_2, q_2_1, t, kill_flag))
     else:
-        host1 = multiprocessing.Process(target=bind_relay, args=(bind1, q_2_1, q_1_2, t, kill_flag))
-        host2 = multiprocessing.Process(target=connect_relay, args=(conn1, q_1_2, q_2_1, t, kill_flag))
+        host1 = Process(target=bind_relay, args=(bind1, q_2_1, q_1_2, t, kill_flag))
+        host2 = Process(target=connect_relay, args=(conn1, q_1_2, q_2_1, t, kill_flag))
     try:
         #Start relay
         host1.daemon=True
@@ -197,16 +196,16 @@ def main():
                 #We've been told to die by another thread.
                 print("[!] - Terminating relays. Please wait.")
                 sleep(3)
-                sys.exit(0)
+                exit(0)
             sleep(1)
     except KeyboardInterrupt:
         print("\n[!] - Interrupted - please wait.")
         kill_flag.set()
         sleep(3)
-        sys.exit()
+        exit(0)
     except Exception as e:
         print("Exception in main : {}".format(e))
-        sys.exit(0)
+        exit(0)
 
 if __name__ == '__main__':
     main()
