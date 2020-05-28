@@ -225,12 +225,12 @@ Simple!
 This tool knocks ports, either in a provided order, or by trying all permutations available (and testing a target port to see which works).
 
 ```
-usage: knocker.py [-h] -H HOST [-kT | -kS | -kU] [-b] -p KNOCK_PORTS [-t TARGET_PORT] [-d DELAY] [-v]
+usage: knock.py [-h] -H HOST [-kT | -kS | -kU] [-b] -p KNOCK_PORTS [-t TARGET_PORT] [-d DELAY] [-v]
 ```
 
 ## Usage
 
-HTTP login forcer supports the following command line options:
+Knock supports the following command line options:
 
 ```
 optional arguments:
@@ -251,7 +251,7 @@ optional arguments:
   -v, --verbose         Show detailed knock information.
 ```
 
-The host flag specifies your target adn can be a hostname or IP address; delay will cause knock packets to be sent after the provided number of seconds.
+The host flag specifies your target and can be a hostname or IP address; delay will cause knock packets to be sent after the provided number of seconds.
 
 Ports must be specified comma-delimited and more than one is required. The Knock protocol flags set the **default** protocol, but this can be overridden as follows:
 
