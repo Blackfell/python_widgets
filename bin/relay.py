@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import socket
-import threading
+import multiprocessing
 import argparse
 import queue
 
@@ -19,7 +19,7 @@ def get_args():
 
     #Count how many connections have been provided
     conns = len(args.listen) if args.listen else 0
-    conns = conns + len(args.connect) if args.connect else conns 
+    conns = conns + len(args.connect) if args.connect else conns
 
     if conns != 2:
         print("")
@@ -169,23 +169,23 @@ def bind_relay(host, q_in, q_out, tee, kill):
 
 def main():
     #Setup queue data structures for relayed data
-    q_1_2 = queue.Queue()
-    q_2_1 = queue.Queue()
-    kill_flag = threading.Event()
-    
+    q_1_2 = multiprocessing.Queue()
+    q_2_1 = multiprocessing.Queue()
+    kill_flag = multiprocessing.Event()
+
     #Get args
     bind1, bind2, conn1, conn2, v, t = get_args()
-    
+
     #Setup relay
     if bind1 and bind2:
-        host1 = threading.Thread(target=bind_relay, args=(bind1, q_2_1, q_1_2, t, kill_flag))
-        host2 = threading.Thread(target=bind_relay, args=(bind2, q_1_2, q_2_1, t, kill_flag))
+        host1 = multiprocessing.Process(target=bind_relay, args=(bind1, q_2_1, q_1_2, t, kill_flag))
+        host2 = multiprocessing.Process(target=bind_relay, args=(bind2, q_1_2, q_2_1, t, kill_flag))
     elif conn1 and conn2:
-        host1 = threading.Thread(target=connect_relay, args=(conn1, q_2_1, q_1_2, t, kill_flag))
-        host2 = threading.Thread(target=connect_relay, args=(conn2, q_1_2, q_2_1, t, kill_flag))
+        host1 = multiprocessing.Process(target=connect_relay, args=(conn1, q_2_1, q_1_2, t, kill_flag))
+        host2 = multiprocessing.Process(target=connect_relay, args=(conn2, q_1_2, q_2_1, t, kill_flag))
     else:
-        host1 = threading.Thread(target=bind_relay, args=(bind1, q_2_1, q_1_2, t, kill_flag))
-        host2 = threading.Thread(target=connect_relay, args=(conn1, q_1_2, q_2_1, t, kill_flag))
+        host1 = multiprocessing.Process(target=bind_relay, args=(bind1, q_2_1, q_1_2, t, kill_flag))
+        host2 = multiprocessing.Process(target=connect_relay, args=(conn1, q_1_2, q_2_1, t, kill_flag))
     try:
         #Start relay
         host1.daemon=True
