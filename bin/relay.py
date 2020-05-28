@@ -96,54 +96,70 @@ def connect_relay(host, q_in, q_out, tee, kill):
             break
         except timeout:
             pass
+        except KeyboardInterrupt:
+            kill.set()
+            s.shutdown(SHUT_RD)
+            s.close()
+            return
         except Exception as e:
             print("[!!] - Can't connect to {}: {}".format(host, e))
             kill.set()
             return
     print("[+] - Connected to {}".format(host))
     while True:
-        if kill.is_set():
-            print("[!] - Killing connection to {}".format(host))
+        try:
+            if kill.is_set():
+                print("[!] - Killing connection to {}".format(host))
+                s.shutdown(SHUT_RD)
+                s.close()
+                return
+    	#if we got data on the sister socket, send that first
+            if not q_in.empty():
+                to_send = q_in.get()
+                s.sendall(to_send)
+    	#Then receive data and give to sister
+            recv_data = recv_from(s)
+            if tee and recv_data:
+                print("---- FROM {} ----".format(host))
+                hexdump(recv_data)
+            q_out.put(recv_data)
+        except KeyboardInterrupt:
+            kill.set()
             s.shutdown(SHUT_RD)
             s.close()
             return
-	#if we got data on the sister socket, send that first
-        if not q_in.empty():
-            to_send = q_in.get()
-            s.sendall(to_send)
-	#Then receive data and give to sister
-        recv_data = recv_from(s)
-        if tee and recv_data:
-            print("---- FROM {} ----".format(host))
-            hexdump(recv_data)
-        q_out.put(recv_data)
 
 def bind_relay(host, q_in, q_out, tee, kill):
+    server = socket(AF_INET, SOCK_STREAM)
     try:
-        server = socket(AF_INET, SOCK_STREAM)
+        server.bind(host)
+    except Exception as e:
+        print("[!!] - Can't bind on {}: {}".format(host, e))
+        exit(0)
+    print("[+] - Listening on {}".format(host))
+    server.listen(0)
+    server.settimeout(0.5)
+    while True:
         try:
-            server.bind(host)
+            if kill.is_set():
+                print("[!] - Killing listener on {}".format(host))
+                server.shutdown(SHUT_RD)
+                server.close()
+                return
+            clnt_sock, addr = server.accept()
+            break
+        except timeout:
+            pass
+        except KeyboardInterrupt:
+            kill.set()
+            server.shutdown(SHUT_RD)
+            server.close()
+            return
         except Exception as e:
-            print("[!!] - Can't bind on {}: {}".format(host, e))
-            exit(0)
-        print("[+] - Listening on {}".format(host))
-        server.listen(0)
-        server.settimeout(0.5)
-        while True:
-            try:
-                if kill.is_set():
-                    print("[!] - Killing listener on {}".format(host))
-                    server.shutdown(SHUT_RD)
-                    server.close()
-                    return
-                clnt_sock, addr = server.accept()
-                break
-            except timeout:
-                pass
-            except Exception as e:
-                print("[!] - Exception accepting connections : {}".format(e))
-        print("[+] - Connection received from {}".format(addr))
-        while True:
+            print("[!] - Exception accepting connections : {}".format(e))
+    print("[+] - Connection received from {}".format(addr))
+    while True:
+        try:
             if kill.is_set():
                 print("[!] - Killing listener on {}".format(host))
                 server.shutdown(SHUT_RD)
@@ -159,11 +175,11 @@ def bind_relay(host, q_in, q_out, tee, kill):
                 print("---- FROM {} ----".format(addr))
                 hexdump(recv_data)
             q_out.put(recv_data)
-    except Exception as e:
-        print("\n[!] - Exception in bind relay thread : {}".format(e))
-        kill_flag.set()
-        sleep(1)
-        return
+        except KeyboardInterrupt:
+            kill.set()
+            server.shutdown(SHUT_RD)
+            server.close()
+            return
 
 
 def main():
