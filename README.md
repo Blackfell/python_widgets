@@ -43,9 +43,9 @@ Installation from scratch:
 ~$ echo "export PATH=$PATH:$(pwd)"  >> ~/.zshrc
 ```
 
-### Most Other Shells (current shell pr/home/hullet/Documents/Projects/python_widgets/README.mdocess only)
+### Temporary install - Most Other Shells
 
-Run in path from scratch, path in shell will reset once teh shell process terminates. In other words, this way is not persistent installation.
+Amend path on the fly, path in shell will reset once the shell process terminates. In other words, this is a temporary install, maybe useful to try the tools out.
 
 ```
 ~$ git clone https://github.com/Blackfell/python_widgets
