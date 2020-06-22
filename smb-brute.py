@@ -10,7 +10,6 @@ Email: info@blackfell.net
 
 '''
 
-
 import requests
 import multiprocessing
 import argparse
@@ -216,9 +215,6 @@ def main():
 
     #SMB variables
     t = args.timeout
-except smb.base.SMBTimeout as e:
-        #Timeouts are OK
-        bc.info()
     #Get crack mode
     crack_mode = get_crack_mode(args.login_list, \
         args.password_list, args.login, args.password)
