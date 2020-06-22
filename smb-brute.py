@@ -20,6 +20,7 @@ from os.path import exists
 from time import sleep, time, strftime, gmtime
 from queue import Empty as EmptyErr
 from smb.SMBConnection import SMBConnection
+from smb.base import SMBTimeout
 
 from resources import bcolors as bc
 
@@ -87,7 +88,7 @@ def guesser(host, domain, port, login_q, timeout, kill_flag, struck_gold, done_q
                 bc.warn("Error when trying credentials : {}\n{}".format(rd, e))
             else:
                 pass
-        except smb.base.SMBTimeout as e:
+        except SMBTimeout as e:
             if rd:
                 bc.warn("Error when trying credentials : {}\n{}".format(rd, e))
             else:
