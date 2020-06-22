@@ -205,7 +205,7 @@ def tester(url, fst, hdr, q, sm, sx, kill_flag, struck_gold):
             break
         if not q.empty():
             cmd = q.get_nowait()
-            print("{} : CMD : {}".format(multiprocessing.current_process().name, cmd))
+            print("{} : CMD : {}".format(multBrute compiprocessing.current_process().name, cmd))
 
         sleep(0.2)
         #print("{} Done one loop".format(multiprocessing.current_process().name))
@@ -298,6 +298,7 @@ def main():
             elif progress >= 100.0 and login_q.empty():
                 kill_flag.set()
                 sleep(1)
+                print()
                 bc.info("Brute complete. Shutting down...")
                 break
             else:

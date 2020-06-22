@@ -282,6 +282,7 @@ def main():
             elif progress >= 100.0 and login_q.empty():
                 kill_flag.set()
                 sleep(1)
+                print()
                 bc.info("Brute complete. Shutting down...")
                 break
             else:
