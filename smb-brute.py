@@ -88,7 +88,7 @@ def guesser(host, domain, port, login_q, timeout, kill_flag, struck_gold, done_q
                 bc.warn("Error when trying credentials : {}\n{}".format(rd, e))
             else:
                 pass
-        except ConnectionResetError as e:
+        except smb.base.SMBTimeout as e:
             if rd:
                 bc.warn("Error when trying credentials : {}\n{}".format(rd, e))
             else:
@@ -216,7 +216,9 @@ def main():
 
     #SMB variables
     t = args.timeout
-
+except smb.base.SMBTimeout as e:
+        #Timeouts are OK
+        bc.info()
     #Get crack mode
     crack_mode = get_crack_mode(args.login_list, \
         args.password_list, args.login, args.password)
