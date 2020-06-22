@@ -28,7 +28,6 @@ def get_args():
     parser = argparse.ArgumentParser()
     passwords = parser.add_mutually_exclusive_group(required = True)
     users = parser.add_mutually_exclusive_group(required = True)
-    condition = parser.add_mutually_exclusive_group(required = True)
     parser.add_argument("-H", "--host", type = str, required = True,\
             help = "Hostname or IP address to attack (e.g. 10.10.10.1 or domain-to-get.local).")
     users.add_argument("-l", "--login", type = str, help = "Username to attack with.")
@@ -67,8 +66,8 @@ def guesser(url, domain, port, login_q, timeout, kill_flag, struck_gold, done_q)
             #Now try and login
             smb = SMBConnection(username = rd[0],
 					password = rd[1], my_name='', remote_name='', domain=domain,
-					use_ntlm_v2 = True, is_direct_tcp=True)
-				login = smb.connect(self.target, port ,timeout= timeout)
+			        use_ntlm_v2 = True, is_direct_tcp=True)
+            login = smb.connect(self.target, port ,timeout= timeout)
 
 
             #Check success
