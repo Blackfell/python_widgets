@@ -277,6 +277,30 @@ Usage:
 
 Simple (again)!
 
+# User Listify
+
+This script takes a list of whitespace separated first and last names and produces a list of potential user names based off common username conventions. The script will carry out four main iterations:
+  - First name and last name concatenated.
+  - First initial and last name.
+  - First name and last initial.
+  - First three letters of first and last names.
+
+In all cases, concatenations are also carried out with standard delimeters, a dash and a space.
+
+Usage:
+
+```
+~$ user_listify.py [-h] [-c] [-d DELIMS] -i INPUT_FILE [-o OUT_FILE] [-a APPEND_NUMBERS]
+```
+
+The case flag *-c* will also iterate basic capitalisation options (the first characters of each name respectively), so you'll see username userName Username and UserName. The default delimeters can be overriden with *-d*, as follows:
+
+```
+~$ user_listify.py -d "'','.','-','_','--'" -i INPUT_FILE
+```
+
+Finally, the append numbers options will also append numbers up to the specified integer to all user names.
+
 # I want Moar
 
 This project is in ongoing development as I work on various challenges; its posted on GitHub to allow people to review and feedback. If you have a suggestion, feature, complaint, funny story, write to: info@blackfell.net.
