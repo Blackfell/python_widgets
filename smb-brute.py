@@ -42,7 +42,7 @@ def get_args():
         help = "SMB login timout, default 5s.' ")
     parser.add_argument("--port", default=445, type=int, \
             help = "SMB port - defaults to 445.' ")
-    parser.add_argument("-d", "--domain", default='', type=str, \
+    parser.add_argument("-d", "--domain", default='WORKGROUP', type=str, \
             help = "Domain to attack, defaults to blank.' ")
 
 
@@ -50,7 +50,7 @@ def get_args():
 
     return args
 
-def guesser(url, domain, port, login_q, timeout, kill_flag, struck_gold, done_q):
+def guesser(host, domain, port, login_q, timeout, kill_flag, struck_gold, done_q):
     """A Method to be the target of worker threads, will read creds from a Queue
     object and try them, telling another queue if it's successful"""
 
@@ -62,12 +62,12 @@ def guesser(url, domain, port, login_q, timeout, kill_flag, struck_gold, done_q)
             rd = login_q.get_nowait()
             if not rd: continue #Because sometimes the queue has null in it
             #bc.info("got {} from queue".format(rd))
-
+            direct_tcp = True if port == 445 else False
             #Now try and login
             smb = SMBConnection(username = rd[0],
-					password = rd[1], my_name='', remote_name='', domain=domain,
-			        use_ntlm_v2 = True, is_direct_tcp=True)
-            login = smb.connect(self.target, port ,timeout= timeout)
+					password = rd[1], my_name = '', remote_name = '', domain=domain,
+			        use_ntlm_v2 = True, is_direct_tcp = direct_tcp)
+            login = smb.connect(host, port ,timeout= timeout)
 
 
             #Check success
