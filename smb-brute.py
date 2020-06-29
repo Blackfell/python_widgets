@@ -281,7 +281,7 @@ def main():
 
     #Now we have mode, carry out attack in whatever way specified
     if crack_mode == 'double':
-        double_mode = spray if args.spray else couble_crack
+        double_mode = double_crack if not args.spray else spray
         #double_crack(args.login_list, args.password_list, login_q, len_q)
         t = multiprocessing.Process(target=double_mode, args=(
             args.login_list, args.password_list, login_q, len_q, ))
