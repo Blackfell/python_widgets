@@ -38,7 +38,7 @@ from socket import socket, timeout, SHUT_RD, AF_INET, SOCK_STREAM
 from multiprocessing import Queue, Process, Event
 from time import sleep
 from sys import exit, argv
-#from hexdump import hexdump        We import this on-the-fly becuase it's not native
+from hexdump import hexdump   #TODO - make native
 
 def get_args():
 
@@ -223,9 +223,6 @@ def main():
 
     #Get args
     bind1, bind2, conn1, conn2, v, t = get_args()
-    #If Tee is set, now import hexdump on the fly
-    if t:
-        from hexdump import hexdump
 
     #Setup relay
     if bind1 and bind2:
