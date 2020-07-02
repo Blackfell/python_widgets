@@ -205,7 +205,7 @@ def tester(url, fst, hdr, q, sm, sx, kill_flag, struck_gold):
             break
         if not q.empty():
             cmd = q.get_nowait()
-            print("{} : CMD : {}".format(multBrute compiprocessing.current_process().name, cmd))
+            print("{} : CMD : {}".format(multiprocessing.current_process().name, cmd))
 
         sleep(0.2)
         #print("{} Done one loop".format(multiprocessing.current_process().name))
