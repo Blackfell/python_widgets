@@ -35,10 +35,10 @@ Usage information is available via:
 
 from argparse import ArgumentParser
 from socket import socket, timeout, SHUT_RD, AF_INET, SOCK_STREAM
-from multiprocessing import Queue, Process, Event
+from multiprocessing import Queue, Process, Event, freeze_support
 from time import sleep
 from sys import exit, argv
-from hexdump import hexdump   #TODO - make native
+from hexdump import hexdump   
 
 def get_args():
 
@@ -217,6 +217,7 @@ def bind_relay(host, q_in, q_out, tee, kill):
 
 def main():
     #Setup queue data structures for relayed data
+    freeze_support()
     q_1_2 = Queue()
     q_2_1 = Queue()
     kill_flag = Event()
