@@ -299,7 +299,7 @@ def main():
     elif crack_mode == 'password':
         #single_crack(args.password_list, args.login, True, login_q, len_q)
         t = multiprocessing.Process(target=single_crack, args=(
-            args.password_list, args.login, True, login_q, len_q, ))Fabricorp01.docx
+            args.password_list, args.login, True, login_q, len_q, ))
     else:
         bc.err("Brute force mode invalid - {}. Exiting.".format(crack_mode))
         kill_flag.set()
