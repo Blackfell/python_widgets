@@ -107,8 +107,9 @@ def guesser(host, domain, port, login_q, timeout, kill_flag, struck_gold, done_q
         except KeyboardInterrupt:
             return
         finally:
-            #Tell main loop we guessed one
-            done_q.put("One more thing tried!")
+            #Tell main loop we guessed one if rd
+            if rd:
+                done_q.put("One more thing tried!")
 
 def get_crack_mode(login_list, password_list, user, password):
     """Checks the mode the brute forcer will use, i.e. Whether
