@@ -322,7 +322,7 @@ def main():
     with progressbar.ProgressBar(max_value= n_guesses) as bar:
         while True:
             try:
-                done = done_q.qsize() if not done_q.empty() else 0
+                done = done_q.qsize() 
             except Exception as e:
                 bc.warn("Error when checking progress : {}".format(e))
                 bc.info("Continuing")
