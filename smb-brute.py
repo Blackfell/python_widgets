@@ -22,6 +22,7 @@ from queue import Empty as EmptyErr
 from smb.SMBConnection import SMBConnection
 from smb.base import SMBTimeout
 from smb.smb_structs import ProtocolError
+from socket import timeout
 
 from resources import bcolors as bc
 
@@ -89,19 +90,25 @@ def guesser(host, domain, port, login_q, timeout, kill_flag, struck_gold, done_q
         except BrokenPipeError as e:
             if rd:
                 print()
-                bc.warn("Error when trying credentials : {}\n{}".format(rd, e))
+                bc.warn("Pipe Error when trying credentials : {}\n{}".format(rd, e))
             else:
                 pass
         except SMBTimeout as e:
             if rd:
                 print()
-                bc.warn("Error when trying credentials : {}\n{}".format(rd, e))
+                bc.warn("SMB Timeout when trying credentials : {}\n{}".format(rd, e))
+            else:
+                pass
+        except timeout as e:
+            if rd:
+                print()
+                bc.warn("Socket Timeout when trying credentials : {}\n{}".format(rd, e))
             else:
                 pass
         except ProtocolError as e:
             if rd:
                 print()
-                bc.warn("Error when trying credentials: {}\n{}".format(rd, e))
+                bc.warn("Protocol Error when trying credentials: {}\n{}".format(rd, e))
             else:
                 pass
         except KeyboardInterrupt:
@@ -322,7 +329,7 @@ def main():
     with progressbar.ProgressBar(max_value= n_guesses) as bar:
         while True:
             try:
-                done = done_q.qsize() 
+                done = done_q.qsize()
             except Exception as e:
                 bc.warn("Error when checking progress : {}".format(e))
                 bc.info("Continuing")
