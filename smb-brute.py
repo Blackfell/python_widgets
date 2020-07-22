@@ -99,12 +99,6 @@ def guesser(host, domain, port, login_q, timeout, kill_flag, struck_gold, done_q
                 bc.warn("SMB Timeout when trying credentials : {}\n{}".format(rd, e))
             else:
                 pass
-        except timeout as e:
-            if rd:
-                print()
-                bc.warn("Socket Timeout when trying credentials : {}\n{}".format(rd, e))
-            else:
-                pass
         except ProtocolError as e:
             if rd:
                 print()
