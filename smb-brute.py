@@ -21,6 +21,7 @@ from time import sleep, time, strftime, gmtime
 from queue import Empty as EmptyErr
 from smb.SMBConnection import SMBConnection
 from smb.base import SMBTimeout
+from smb.smb_structs import ProtocolError
 
 from resources import bcolors as bc
 
@@ -95,6 +96,12 @@ def guesser(host, domain, port, login_q, timeout, kill_flag, struck_gold, done_q
             if rd:
                 print()
                 bc.warn("Error when trying credentials : {}\n{}".format(rd, e))
+            else:
+                pass
+        except ProtocolError as e:
+            if rd:
+                print()
+                bc.warn("Error when trying credentials: {}\n{}".format(rd, e))
             else:
                 pass
         except KeyboardInterrupt:
@@ -292,7 +299,7 @@ def main():
     elif crack_mode == 'password':
         #single_crack(args.password_list, args.login, True, login_q, len_q)
         t = multiprocessing.Process(target=single_crack, args=(
-            args.password_list, args.login, True, login_q, len_q, ))
+            args.password_list, args.login, True, login_q, len_q, ))Fabricorp01.docx
     else:
         bc.err("Brute force mode invalid - {}. Exiting.".format(crack_mode))
         kill_flag.set()
