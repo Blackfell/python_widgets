@@ -105,6 +105,7 @@ def main():
             total_names = {}
             for names in f:
                 names = names.strip()
+                if not names: continue
                 if len(names.split()) > 2:
                     bc.err("Error, name {} is more than 2 words. Skipping.".format(
                             names))
