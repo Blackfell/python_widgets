@@ -38,7 +38,7 @@ from socket import socket, timeout, SHUT_RD, AF_INET, SOCK_STREAM
 from multiprocessing import Queue, Process, Event, freeze_support
 from time import sleep
 from sys import exit, argv
-from hexdump import hexdump   
+from hexdump import hexdump
 
 def get_args():
 
@@ -190,7 +190,7 @@ def bind_relay(host, q_in, q_out, tee, kill):
             return
         except Exception as e:
             print("[!] - Exception accepting connections : {}".format(e))
-    print("[+] - Connection received from {}".format(addr))
+    print("[+] - Connection received from {} to {}".format(addr, host))
     while True:
         try:
             if kill.is_set():
