@@ -3,3 +3,5 @@ progressbar2
 requests
 scapy
 pysmb
+discord-webhook
+pyyaml
