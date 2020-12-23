@@ -3,9 +3,11 @@
 import subprocess, argparse, yaml, threading, multiprocessing
 
 from discord_webhook import DiscordWebhook, DiscordEmbed
-from sys import exit
+from sys import exit, executable
 from time import time, sleep
 from queue import Queue
+from os.path import dirname, realpath
+#config_file = os.path.dirname(os.path.realpath(__file__)))
 
 from resources import bcolors
 
@@ -23,7 +25,7 @@ def get_args():
             help = "Include a summary of Stdout (console output) on copletion of the job.")
     parser.add_argument("-b", "--beat", type=int, action="store", nargs="?", const=15, \
             help = "Check STDOUT regularly and report any changes. Defaults to 15 mins if blank.")
-    parser.add_argument("-C", "--config", type=str, default="discordnotify.yml", \
+    parser.add_argument("-C", "--config", type=str, default="resources/discordnotify.yml", \
             help = "YAML configuration file, containing webhhok information.")
     parser.add_argument("-c", "--command", type=str, required=True, \
             help = "Command line to execute. Quote and escape as appropriate for your shell.")
@@ -124,7 +126,10 @@ def main():
 
     # Configuration and config stuff
     args = get_args()
-    config = get_config(args.config)
+    if args.config == 'resources/discordnotify.yml':
+        config_file = dirname(realpath(__file__)) + \
+                '/resources/discordnotify.yml'        
+    config = get_config(config_file)
     hook_name, hook, user = check_config(args, config)
     bcolors.info("Executing job: {}".format(
         bcolors.bold_format(args.command)), strong=True)
@@ -160,9 +165,6 @@ def main():
         stdout_worker.start()
         while p.poll() == None:
             try:
-                #o = p.stdout.readline()#.decode() 
-                #if o is not None and o != "": print(o, end="")
-                #output += o
                 while not stdout_q.empty():
                     output+= stdout_q.get()
                 t3=time()
