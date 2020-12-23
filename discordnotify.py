@@ -4,7 +4,7 @@ import subprocess, argparse, yaml, threading, multiprocessing
 
 from discord_webhook import DiscordWebhook, DiscordEmbed
 from sys import exit, executable
-from time import time, sleep
+from time import time, sleep, ctime
 from queue import Queue
 from os.path import dirname, realpath
 #config_file = os.path.dirname(os.path.realpath(__file__)))
@@ -153,6 +153,7 @@ def main():
     t1 = time()
     t2 = time()
     worker = False
+    start_time = ctime()    #Human friendly :)
     output=''
     p = subprocess.Popen(
             args.command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,\
@@ -175,7 +176,7 @@ def main():
                     # update embed summary data with stdout summary and time info
                     embed.fields[0]['value'] = \
                             "Started: {} Elapsed : {}s Output summary:\n{}".format(
-                            time.ctime(), round(t3-t1),trim_output(
+                            start_time, round(t3-t1),trim_output(
                             output, config['instance_info']['max_embed_lines']))
                     wh.edit(sent_wh)   # and send it
             except Exception as e:
