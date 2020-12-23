@@ -2,3 +2,4 @@
 *__init__.py
 widget_venv
 .gitignore
+discordnotify.yml

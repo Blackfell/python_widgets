@@ -1,0 +1,11 @@
+---
+hook_urls:
+  security: "YOUR_DISCROD_WEBHOOK_HERE"
+  alerts: "YOUR_DISCROD_WEBHOOK_HERE"
+
+default_hook: 'alerts'
+
+instance_info:
+  username: "Job Notifier"
+  image: "https://blackfell.net/assets/images/generic/triangle_logo.png"
+  max_embed_lines: 20
