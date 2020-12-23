@@ -152,6 +152,7 @@ def main():
     #Pre-ampble and process start
     t1 = time()
     t2 = time()
+    worker = False
     output=''
     p = subprocess.Popen(
             args.command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,\
@@ -159,6 +160,7 @@ def main():
 
     # Manage beat updates
     if args.beat:
+        worker = True
         embed.add_embed_field(name="Job ongoing", value="No updates yet...", inline=False) 
         stdout_q = multiprocessing.Queue()
         stdout_worker = multiprocessing.Process(target=stdout_reader, args=(p, stdout_q))
@@ -174,7 +176,7 @@ def main():
                     embed.fields[0]['value'] = \
                             "Started: {} Elapsed : {}s Output summary:\n{}".format(
                             time.ctime(), round(t3-t1),trim_output(
-                            output, config.user['max_embed_lines']))
+                            output, config['instance_info']['max_embed_lines']))
                     wh.edit(sent_wh)   # and send it
             except Exception as e:
                 bcolors.err("Error sending update:\n{}".format(e))
@@ -190,7 +192,7 @@ def main():
             (exit code {}) in {} Seconds".format(
             was_error, p.returncode, duration), inline=False)
     if output:
-        out_summary = trim_output(output, config.user['max_embed_lines']) 
+        out_summary = trim_output(output, config['instance_info']['max_embed_lines']) 
     else:
         out_summary = "No data on STDOUT or STDERR."
     embed.add_embed_field(name="Stdout Summary", value=out_summary, inline=False) 
@@ -218,8 +220,9 @@ def main():
             bcolors.err("Couldn't attach file : {} :\n{}".format(args.file, e))
     
     # Worker process cleanup
-    stdout_worker.terminate()
-    stdout_worker.join(5)
+    if worker:
+        stdout_worker.terminate()
+        stdout_worker.join(5)
 
 
 if __name__ == '__main__':
