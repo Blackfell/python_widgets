@@ -301,6 +301,25 @@ The case flag *-c* will also iterate basic capitalisation options (the first cha
 
 Finally, the append numbers options will also append numbers up to the specified integer to all user names.
 
+# Discord Notify
+
+This script takes a command line and calls it via the Python Subprocess module, sending the output and optional Stdout/Stderr updates to Discord. Discord configuration is managed via a YAML configuration file, which defines your webhooks and enables you to send output to channels by specifying a friendly name. If you want to run an nmap scan against all ports on your loopback, with updates every 120 seconds, you might call:
+
+```
+~$ discordnotify.py -b 120 -c "nmap -Pn -p- localhost"
+```
+
+Please note your mileage will vary heavily with verbose and fancy terminal tools (e.g. progress bars), so running in silent of less-verbose modes is a good idea:
+
+
+```
+~$ discordnotify.py -b 240 -c "ffuf -w ./wordlkist.txt -u https://target.local/FUZZ"
+```
+
+You may also specify a webhook URL manually on the command line, or speficy a file to attch after the job completes. The image attachment feature is in work and doesn't currently function correctly.
+
+In summary - It ain't pretty, but it works.
+
 # I want Moar
 
 This project is in ongoing development as I work on various challenges; its posted on GitHub to allow people to review and feedback. If you have a suggestion, feature, complaint, funny story, write to: info@blackfell.net.

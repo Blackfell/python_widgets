@@ -12,8 +12,8 @@ from os.path import dirname, realpath
 from resources import bcolors
 
 def get_args():
-    """Parse known command line arguments, read in any unknown arguments as the 
-            commadn line of the job to be monitored."""
+    """Parse known command line arguments, read in any unknown arguments as the
+            command line of the job to be monitored."""
 
     parser = argparse.ArgumentParser()
     hooks = parser.add_mutually_exclusive_group()
@@ -33,11 +33,7 @@ def get_args():
             help = "The YAML key for the webhook to be used for this report, defaul is 'default'.")
     hooks.add_argument("-u", "--web-hook-url", type=str, \
             help = "The web hook URL can be overriden on the CLI instead of from config file.")
-    #args, unknown = parser.parse_known_args()
     args = parser.parse_args()
-    #if not unknown:
-    #    bcolors.err("No job has been speficied, quitting.")
-    #    exit()
     return args
 
 def get_config(config_file):
@@ -53,7 +49,7 @@ def get_config(config_file):
 def check_config(args, config):
     """Parse all our settings and return sanitised hook information, also check
             for argument and config file correct-ness"""
-    
+
     # Work out what hook is being used and report
     if args.web_hook_url:
         job_hook = args.web_hook_url
@@ -96,16 +92,13 @@ def cut_middle_lines(lines):
         last = lines[(mid+1):]
         return first + ["[..SNIP..]"] + last
 
-
-
-
 def trim_output(thing, line_lim=20):
     """ensure our output meets discord 1024 character limit for fields
     and also configure a user defined (TODO) line limit for field updates"""
 
     half1=[]
     half2=[]
-    i = 0 
+    i = 0
     thingd=thing.split('\n')
     # Trim output, starting with line lim for readability
     while len(thingd) > line_lim:
@@ -113,7 +106,7 @@ def trim_output(thing, line_lim=20):
     while len('\n'.join(thingd)) > 1024:
         thingd = cut_middle_lines(thingd)
 
-    return '\n'.join(thingd) 
+    return '\n'.join(thingd)
 
 def stdout_reader(proc, stdout_q):
     while True:
@@ -128,12 +121,12 @@ def main():
     args = get_args()
     if args.config == 'resources/discordnotify.yml':
         config_file = dirname(realpath(__file__)) + \
-                '/resources/discordnotify.yml'        
+                '/resources/discordnotify.yml'
     config = get_config(config_file)
     hook_name, hook, user = check_config(args, config)
     bcolors.info("Executing job: {}".format(
         bcolors.bold_format(args.command)), strong=True)
-    
+
     #Create main webhook for proc completion
     wh = DiscordWebhook(url=hook, \
             content="You've just started a job. Brace for updates...",\
@@ -148,7 +141,7 @@ def main():
     embed.set_footer(text="Sent with DiscordNotify by @blackf3ll - github@blackfell.net")
     wh.add_embed(embed)
     sent_wh = wh.execute()
-    
+
     #Pre-ampble and process start
     t1 = time()
     t2 = time()
@@ -162,7 +155,7 @@ def main():
     # Manage beat updates
     if args.beat:
         worker = True
-        embed.add_embed_field(name="Job ongoing", value="No updates yet...", inline=False) 
+        embed.add_embed_field(name="Job ongoing", value="No updates yet...", inline=False)
         stdout_q = multiprocessing.Queue()
         stdout_worker = multiprocessing.Process(target=stdout_reader, args=(p, stdout_q))
         stdout_worker.start()
@@ -181,32 +174,32 @@ def main():
                     wh.edit(sent_wh)   # and send it
             except Exception as e:
                 bcolors.err("Error sending update:\n{}".format(e))
-    
+
     # Mop up any un-read stdout and print to console
-    output += p.stdout.read()#.decode() 
+    output += p.stdout.read()#.decode()
     duration = round(time() - t1)
     print(output)
-    
+
     #Configure final report & embed in webhook
     was_error= "with errors" if p.returncode !=0 else "without errors"
     embed.add_embed_field(name="Process Complete", value="Completed {} \
             (exit code {}) in {} Seconds".format(
             was_error, p.returncode, duration), inline=False)
     if output:
-        out_summary = trim_output(output, config['instance_info']['max_embed_lines']) 
+        out_summary = trim_output(output, config['instance_info']['max_embed_lines'])
     else:
         out_summary = "No data on STDOUT or STDERR."
-    embed.add_embed_field(name="Stdout Summary", value=out_summary, inline=False) 
-    
-    # Add any requested image - TODO - fix this add to file attachment?
-    if args.image: 
+    embed.add_embed_field(name="Stdout Summary", value=out_summary, inline=False)
+
+    # Add any requested image - TODO - fix this so it works - add to file attachment?
+    if args.image:
         embed.set_thumbnail(url='attachment://{}'.format(args.image))
     # Now send
     try:
         wh.edit(sent_wh)
     except Exception as e:
         bcolors.err("Failed to send update to Discord:\n{}".format(e))
-    
+
     # Send any file on afterwards, to avoid conflictings file space/embed requirements
     if args.file:
         # Use a fresh webhook to avoid API limits and issues with large embeds
@@ -219,7 +212,7 @@ def main():
                 filewh.execute()
         except Exception as e:
             bcolors.err("Couldn't attach file : {} :\n{}".format(args.file, e))
-    
+
     # Worker process cleanup
     if worker:
         stdout_worker.terminate()
