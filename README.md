@@ -313,7 +313,7 @@ Please note your mileage will vary heavily with verbose and fancy terminal tools
 
 
 ```
-~$ discordnotify.py -b 240 -c "ffuf -w ./wordlkist.txt -u https://target.local/FUZZ"
+~$ discordnotify.py -b 240 -c "ffuf -s -w ./wordlkist.txt -u https://target.local/FUZZ"
 ```
 
 You may also specify a webhook URL manually on the command line, or speficy a file to attch after the job completes. The image attachment feature is in work and doesn't currently function correctly.
