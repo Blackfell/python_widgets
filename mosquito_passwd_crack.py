@@ -103,5 +103,3 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         bc.info("Interrupted, exiting.")
-    except Exception as e:
-        bc.err("Unexpected error:\n{}".format(e))
