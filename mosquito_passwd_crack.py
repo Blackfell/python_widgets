@@ -53,11 +53,63 @@ def format_hash(hash_string, hash_dict):
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-w", "--wordlist", type = str, \
-            help = "Wordlist file.", required = True)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("-w", "--wordlist", type = str, \
+            help = "Path to wordlist file.")
+    mode.add_argument("-c", "--convert-hashcat", action = "store_true", \
+            help = "Don't crack, just convert to hashcat.")
+    mode.add_argument("-j", "--convert-john", action = "store_true", \
+            help = "Don't crack, just convert to John.")
     parser.add_argument("-f", "--hashfile", type = str, \
             help = "File containing candidate hashes", required = True)
+    parser.add_argument("-o", "--out-file", type = str, \
+            help = "File name for converted hashes - default - 'converted'",\
+            default = 'converted')
+    
     return parser.parse_args()
+
+def sha512_to_hashcat(hash_data):
+    """Takes my hash list and turns it into a hashcat compatible
+    format"""
+
+    salt = hash_data[0]
+    b64_digest = hash_data[1]
+    user = hash_data[2]
+    #iterations = hash_Data[3]
+    
+    fmt_str = "{}06${}${}"
+    fmt_str_old = "{}:{}"
+
+    hex_digest = ""
+    for byte in b64decode(b64_digest):
+        h = hex(byte)[2:]
+        hex_digest += h if len(h) == 2 else  "0" + h 
+
+    hex_salt = ""
+    for byte in salt:
+        h = hex(byte)[2:]
+        hex_salt += h if len(h) == 2 else  "0" + h 
+    
+    bc.info("SALT : {} DIGEST: {}".format(b64encode(salt).decode().upper(), b64_digest.upper()))
+    old_way = fmt_str_old.format(hex_digest.upper(), hex_salt.upper())
+    new_way = fmt_str.format("{ssha512}", b64encode(salt).decode().upper(), b64_digest.upper())
+    return old_way
+
+def hmac_to_hashcat(hash_data):
+    """Take a hash and return a valid hashcat hash for the 
+    PBKDF2-HMAC-SHA512 hash mode (12100)"""
+
+    # Hashcat mode 12100   PBKDF2-HMAC-SHA512  sha512:1000:ODQyMDEwNjQyODY=:MKaHNWXUsuJB3IEwBHbm3w== 
+    salt = hash_data[0]
+    b64_digest = hash_data[1]
+    user = hash_data[2]
+    iterations = hash_data[3]
+    
+    fmt_str = "sha512:{}:{}:{}"
+
+    bc.info("SALT : {} DIGEST: {}".format(b64encode(salt).decode().upper(), b64_digest.upper()))
+    return fmt_str.format(iterations, b64encode(salt).decode(), b64_digest)
+    
 
 def main():
     args = get_args()
@@ -68,6 +120,30 @@ def main():
     bc.info("Parsed {} HMAC and {} SHA512 Hashes from {}".format(
         len(hmac_to_crack), len(sha512_to_crack), args.hashfile))
 
+    #Hashcat conversion operation
+    if args.convert_hashcat:
+        sha512s = []
+        hmacs = []
+        for h in sha512_to_crack:
+            sha512s.append(sha512_to_hashcat(h))
+        for h in hmac_to_crack:
+            hmacs.append(hmac_to_hashcat(h))
+        if len(sha512s) > 0:
+            with open("{}.1710.hcat".format(args.out_file), "w") as o:
+                for h in sha512s:
+                    o.write(h + "\n")
+        if len(hmacs) > 0:
+            with open("{}.12100.hcat".format(args.out_file), "w") as o:
+                for h in hmacs:
+                    o.write(h + "\n")
+        bc.success("Hashes written out to files starting '{}'".format(
+            args.out_file))
+        bc.info("Run SHA512s in mode 1710 with --hex-salts.", strong=True)
+        bc.info("Run HMAC-SHA512s in mode 12100.", strong=True)
+        exit(0)
+
+
+    
     with open(args.wordlist, 'r', encoding='latin-1') as w:
         for word in w:
             if not word: continue
@@ -82,7 +158,7 @@ def main():
                     this_hash = sha512(word.encode() + h[0]).digest()
                     if b64encode(this_hash).decode() == h[1]:
                         bc.success("{} : {}".format(
-                            h[2], word))
+                            h[2], word), strong=True)
                         sha512_to_crack.remove(h)
 
             # Now for any HMACS
@@ -91,7 +167,7 @@ def main():
                     this_hash = pbkdf2_hmac('sha512', word.encode(), h[0], int(h[3]))
                     if b64encode(this_hash).decode() == h[1]:
                         bc.success("{} : {}".format(
-                            h[2], word))
+                            h[2], word), strong=True)
                         hmac_to_crack.remove(h)
 
     bc.info("{} HMAC and {} SHA512 hashes left to be cracked.".format(
