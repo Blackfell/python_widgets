@@ -75,10 +75,8 @@ def sha512_to_hashcat(hash_data):
     salt = hash_data[0]
     b64_digest = hash_data[1]
     user = hash_data[2]
-    #iterations = hash_Data[3]
     
-    fmt_str = "{}06${}${}"
-    fmt_str_old = "{}:{}"
+    fmt_str = "{}:{}"
 
     hex_digest = ""
     for byte in b64decode(b64_digest):
@@ -90,16 +88,12 @@ def sha512_to_hashcat(hash_data):
         h = hex(byte)[2:]
         hex_salt += h if len(h) == 2 else  "0" + h 
     
-    bc.info("SALT : {} DIGEST: {}".format(b64encode(salt).decode().upper(), b64_digest.upper()))
-    old_way = fmt_str_old.format(hex_digest.upper(), hex_salt.upper())
-    new_way = fmt_str.format("{ssha512}", b64encode(salt).decode().upper(), b64_digest.upper())
-    return old_way
+    return fmt_str.format(hex_digest.upper(), hex_salt.upper())
 
 def hmac_to_hashcat(hash_data):
     """Take a hash and return a valid hashcat hash for the 
     PBKDF2-HMAC-SHA512 hash mode (12100)"""
 
-    # Hashcat mode 12100   PBKDF2-HMAC-SHA512  sha512:1000:ODQyMDEwNjQyODY=:MKaHNWXUsuJB3IEwBHbm3w== 
     salt = hash_data[0]
     b64_digest = hash_data[1]
     user = hash_data[2]
@@ -107,9 +101,99 @@ def hmac_to_hashcat(hash_data):
     
     fmt_str = "sha512:{}:{}:{}"
 
-    bc.info("SALT : {} DIGEST: {}".format(b64encode(salt).decode().upper(), b64_digest.upper()))
     return fmt_str.format(iterations, b64encode(salt).decode(), b64_digest)
+
+def convert_hashcat(args, sha512_to_crack, hmac_to_crack):
+    """Take a mosquitto_passwd file and convert it to hashcat format
+    can handle both SHA512 and PBKDF2_HMAC_SHA512 output formats"""
+
+    sha512s = []
+    hmacs = []
+    for h in sha512_to_crack:
+        sha512s.append(sha512_to_hashcat(h))
+    for h in hmac_to_crack:
+        hmacs.append(hmac_to_hashcat(h))
+    if len(sha512s) > 0:
+        with open("{}.1710.hcat".format(args.out_file), "w") as o:
+            for h in sha512s:
+                o.write(h + "\n")
+    if len(hmacs) > 0:
+        with open("{}.12100.hcat".format(args.out_file), "w") as o:
+            for h in hmacs:
+                o.write(h + "\n")
+    bc.success("Hashes written out to files starting '{}'".format(
+        args.out_file))
+    bc.info("Run SHA512s in mode 1710 with --hex-salt.", strong=True)
+    bc.info("Run HMAC-SHA512s in mode 12100.", strong=True)
+
+def hmac_to_john(hash_data):
+    """Take a hash and return a valid john hash for the 
+    PBKDF2-HMAC-SHA512 hash dynamic mode ()"""
+
+    salt = hash_data[0]
+    b64_digest = hash_data[1]
+    user = hash_data[2]
+    iterns = hash_data[3]
     
+    fmt_str = "{}:$pbkdf2-hmac-sha512${}.{}.{}"
+    
+    hex_digest = ""
+    for byte in b64decode(b64_digest):
+        h = hex(byte)[2:]
+        hex_digest += h if len(h) == 2 else  "0" + h 
+
+    hex_salt = ""
+    for byte in salt:
+        h = hex(byte)[2:]
+        hex_salt += h if len(h) == 2 else  "0" + h 
+    
+    return fmt_str.format(user, iterns, hex_salt.upper(), hex_digest.upper())
+
+def sha512_to_john(hash_data):
+    """Takes my hash list and turns it into a john compatible format"""
+
+    salt = hash_data[0]
+    b64_digest = hash_data[1]
+    user = hash_data[2]
+    
+    fmt_str = "{}:$dynamic_82${}$HEX${}"
+
+    hex_digest = ""
+    for byte in b64decode(b64_digest):
+        h = hex(byte)[2:]
+        hex_digest += h if len(h) == 2 else  "0" + h 
+
+    hex_salt = ""
+    for byte in salt:
+        h = hex(byte)[2:]
+        hex_salt += h if len(h) == 2 else  "0" + h 
+    
+    return fmt_str.format(user, hex_digest.upper(), hex_salt.upper())
+
+def convert_john(args, sha512_to_crack, hmac_to_crack):
+    """Take a mosquitto_passwd file and convert it to John's dynamic 82
+    format. Can handle both SHA512 and PBKDF2_HMAC_SHA512 output formats.
+    Using raw hex for hash and salt because bad bytes."""
+
+    sha512s = []
+    hmacs = []
+    for h in sha512_to_crack:
+        sha512s.append(sha512_to_john(h))
+    for h in hmac_to_crack:
+        hmacs.append(hmac_to_john(h))
+    if len(sha512s) > 0:
+        with open("{}.sha512s.john".format(args.out_file), "w") as o:
+            for h in sha512s:
+                o.write(h + "\n")
+    if len(hmacs) > 0:
+        with open("{}.hmacs.john".format(args.out_file), "w") as o:
+            for h in hmacs:
+                o.write(h + "\n")
+    bc.success("Hashes written out to files starting '{}'".format(
+        args.out_file))
+    bc.info("Run separate sessions for each hash type. " + \
+            "No format specification needed.", strong=True)
+
 
 def main():
     args = get_args()
@@ -122,27 +206,13 @@ def main():
 
     #Hashcat conversion operation
     if args.convert_hashcat:
-        sha512s = []
-        hmacs = []
-        for h in sha512_to_crack:
-            sha512s.append(sha512_to_hashcat(h))
-        for h in hmac_to_crack:
-            hmacs.append(hmac_to_hashcat(h))
-        if len(sha512s) > 0:
-            with open("{}.1710.hcat".format(args.out_file), "w") as o:
-                for h in sha512s:
-                    o.write(h + "\n")
-        if len(hmacs) > 0:
-            with open("{}.12100.hcat".format(args.out_file), "w") as o:
-                for h in hmacs:
-                    o.write(h + "\n")
-        bc.success("Hashes written out to files starting '{}'".format(
-            args.out_file))
-        bc.info("Run SHA512s in mode 1710 with --hex-salts.", strong=True)
-        bc.info("Run HMAC-SHA512s in mode 12100.", strong=True)
+        convert_hashcat(args, sha512_to_crack, hmac_to_crack)
         exit(0)
 
-
+    # John conversion operation
+    elif args.convert_john:
+        convert_john(args, sha512_to_crack, hmac_to_crack)
+        exit(0)
     
     with open(args.wordlist, 'r', encoding='latin-1') as w:
         for word in w:

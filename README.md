@@ -320,6 +320,71 @@ You may also specify a webhook URL manually on the command line, or speficy a fi
 
 In summary - It ain't pretty, but it works.
 
+# mosquitto_passwd_crack
+
+This script takes a [mosquitto_passwd file](https://mosquitto.org/man/mosquitto_passwd-1.html) and can convert it to a valid John or Hashcat file for hash cracking, there is also support for directly cracking (slowly) in Python - this is how I solved a challenge in the first instance. Because mosquitto_passwd allows hash type mixing, hashes are written out to .hcat and .john files for each hash type. Minnimal instructions are given on usage:
+
+```
+# Get usage info
+❯ mosquito_passwd_crack.py --help                                                                     
+usage: mosquito_passwd_crack.py [-h] (-w WORDLIST | -c | -j) -f HASHFILE [-o OUT_FILE
+ arguments:                                                                                       
+  -h, --help            show this help message and exit
+  -w WORDLIST, --wordlist WORDLIST Path to wordlist file.
+  -c, --convert-hashcat Don't crack, just convert to hashcat.
+  -j, --convert-john    Don't crack, just convert to John.
+  -f HASHFILE, --hashfile HASHFILE File containing candidate hashes
+  -o OUT_FILE, --out-file OUT_FIL File name for converted hashes - default - 'converted'
+```
+
+Cracking with John is the easiest, as the converted files include hash mode specifiers:
+
+```
+# First convert 'passwd' into a john file set
+❯ mosquito_passwd_crack.py -f passwd -j -o john_out_file
+[-] - Parsed 1 HMAC and 1 SHA512 Hashes from passwd
+[-] - Hashes written out to files starting 'john_out_file'
+[+] - Run separate sessions for each hash type. No format specification needed.
+❯ ls
+john_out_file.hmacs.john  john_out_file.sha512s.john
+
+# Now crack one at a time because different hash modes
+❯ john ./john_out_file.hmacs.john
+[... SNIP ...]
+❯ john ./john_out_file.sha512s.john
+[... SNIP ...]
+#You're done!
+```
+
+Hashcat cracking is also easy but you need to specify hash modes and use --hex-salt with straight SHA512 hashes.
+
+```
+# First convert 'passwd' into a hashcat file set
+❯ mosquito_passwd_crack.py -f passwd -j -o hcat_out_file
+[-] - Parsed 1 HMAC and 1 SHA512 Hashes from passwd
+[-] - Hashes written out to files starting 'hcat_out_file'
+[+] - Run SHA512s in mode 1710 with --hex-salt.
+[+] - Run HMAC-SHA512s in mode 12100.
+❯ ls
+hcat_out_file.12100.hcat  hcat_out_file.1710.hcat
+
+# Now crack one at a time because different hash modes, e.g.
+❯ hashcat -a 0 -m 1710 --hex-salt ./hcat_out_file.1710.hcat [WORDLIST]
+[... SNIP ...]
+❯ hashcat -a 0 -m 12100 ./hcat_out_file.12100.hcat [WORDLIST]
+[... SNIP ...]
+#You're done!
+```
+
+Or if you're really strange (I'm looking at me) crack the hashes straight from the script:
+
+```
+❯ mosquitto_passwd_crack.py -f passwd -w [WORDLIST]
+[... SNIP ...]
+```
+
+And you'll be blessed with some hash crackage without any other tooling needed. Enjoy :)
+
 # I want Moar
 
 This project is in ongoing development as I work on various challenges; its posted on GitHub to allow people to review and feedback. If you have a suggestion, feature, complaint, funny story, write to: info@blackfell.net.
