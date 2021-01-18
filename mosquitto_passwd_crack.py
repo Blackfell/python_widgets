@@ -10,7 +10,7 @@ from sys import exit
 import resources.bcolors as bc
 
 def parse_hashfile(filename):
-    """Reads a hashfile and tries to load any valid mosquito_passwd
+    """Reads a hashfile and tries to load any valid mosquitto_passwd
     hashes"""
 
     hashes = [[], []]   # first element hmacs, second 512s
@@ -23,7 +23,7 @@ def parse_hashfile(filename):
     with open(filename, 'r') as h:
         for line in h:
             m = regex.match(line)
-            if m: 
+            if m:
                 hash_info = format_hash(m.group(), hashes)
                 if hash_info[0] == 'sha512':
                     hashes[1].append(hash_info[1:4])    #Snip off iterations
@@ -35,8 +35,8 @@ def parse_hashfile(filename):
 def format_hash(hash_string, hash_dict):
     """Takes the input hash string from our file and rationalises it
     into the algo salt, digest and if applicable, iterations for HMAC."""
-    
-    # We know mosquito_passwd bans colons in the name and B64 is safe, so split
+
+    # We know mosquitto_passwd bans colons in the name and B64 is safe, so split
     user, hash_info = hash_string.split(":")
     if hash_info.count("$") == 4:
         junk, morejunk, salt, iterations, digest = hash_info.split("$")
@@ -65,7 +65,7 @@ def get_args():
     parser.add_argument("-o", "--out-file", type = str, \
             help = "File name for converted hashes - default - 'converted'",\
             default = 'converted')
-    
+
     return parser.parse_args()
 
 def sha512_to_hashcat(hash_data):
@@ -75,30 +75,30 @@ def sha512_to_hashcat(hash_data):
     salt = hash_data[0]
     b64_digest = hash_data[1]
     user = hash_data[2]
-    
+
     fmt_str = "{}:{}"
 
     hex_digest = ""
     for byte in b64decode(b64_digest):
         h = hex(byte)[2:]
-        hex_digest += h if len(h) == 2 else  "0" + h 
+        hex_digest += h if len(h) == 2 else  "0" + h
 
     hex_salt = ""
     for byte in salt:
         h = hex(byte)[2:]
-        hex_salt += h if len(h) == 2 else  "0" + h 
-    
+        hex_salt += h if len(h) == 2 else  "0" + h
+
     return fmt_str.format(hex_digest.upper(), hex_salt.upper())
 
 def hmac_to_hashcat(hash_data):
-    """Take a hash and return a valid hashcat hash for the 
+    """Take a hash and return a valid hashcat hash for the
     PBKDF2-HMAC-SHA512 hash mode (12100)"""
 
     salt = hash_data[0]
     b64_digest = hash_data[1]
     user = hash_data[2]
     iterations = hash_data[3]
-    
+
     fmt_str = "sha512:{}:{}:{}"
 
     return fmt_str.format(iterations, b64encode(salt).decode(), b64_digest)
@@ -127,26 +127,26 @@ def convert_hashcat(args, sha512_to_crack, hmac_to_crack):
     bc.info("Run HMAC-SHA512s in mode 12100.", strong=True)
 
 def hmac_to_john(hash_data):
-    """Take a hash and return a valid john hash for the 
+    """Take a hash and return a valid john hash for the
     PBKDF2-HMAC-SHA512 hash dynamic mode ()"""
 
     salt = hash_data[0]
     b64_digest = hash_data[1]
     user = hash_data[2]
     iterns = hash_data[3]
-    
+
     fmt_str = "{}:$pbkdf2-hmac-sha512${}.{}.{}"
-    
+
     hex_digest = ""
     for byte in b64decode(b64_digest):
         h = hex(byte)[2:]
-        hex_digest += h if len(h) == 2 else  "0" + h 
+        hex_digest += h if len(h) == 2 else  "0" + h
 
     hex_salt = ""
     for byte in salt:
         h = hex(byte)[2:]
-        hex_salt += h if len(h) == 2 else  "0" + h 
-    
+        hex_salt += h if len(h) == 2 else  "0" + h
+
     return fmt_str.format(user, iterns, hex_salt.upper(), hex_digest.upper())
 
 def sha512_to_john(hash_data):
@@ -155,19 +155,19 @@ def sha512_to_john(hash_data):
     salt = hash_data[0]
     b64_digest = hash_data[1]
     user = hash_data[2]
-    
+
     fmt_str = "{}:$dynamic_82${}$HEX${}"
 
     hex_digest = ""
     for byte in b64decode(b64_digest):
         h = hex(byte)[2:]
-        hex_digest += h if len(h) == 2 else  "0" + h 
+        hex_digest += h if len(h) == 2 else  "0" + h
 
     hex_salt = ""
     for byte in salt:
         h = hex(byte)[2:]
-        hex_salt += h if len(h) == 2 else  "0" + h 
-    
+        hex_salt += h if len(h) == 2 else  "0" + h
+
     return fmt_str.format(user, hex_digest.upper(), hex_salt.upper())
 
 def convert_john(args, sha512_to_crack, hmac_to_crack):
@@ -197,7 +197,7 @@ def convert_john(args, sha512_to_crack, hmac_to_crack):
 
 def main():
     args = get_args()
-    
+
     hashes = parse_hashfile(args.hashfile)
     hmac_to_crack = hashes[0]
     sha512_to_crack = hashes[1]
@@ -213,7 +213,7 @@ def main():
     elif args.convert_john:
         convert_john(args, sha512_to_crack, hmac_to_crack)
         exit(0)
-    
+
     with open(args.wordlist, 'r', encoding='latin-1') as w:
         for word in w:
             if not word: continue
