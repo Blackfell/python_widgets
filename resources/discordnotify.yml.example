@@ -7,5 +7,5 @@ default_hook: 'alerts'
 
 instance_info:
   username: "Job Notifier"
-  image: "https://blackfell.net/assets/images/generic/triangle_logo.png"
+  image: "https://blackfell.net/favicon.ico"
   max_embed_lines: 20
